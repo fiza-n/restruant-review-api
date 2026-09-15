@@ -10,3 +10,6 @@ class User(Base):
     __tablename__ = "users"
 
     id:Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    email:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    image_file:Mapped[str|None] = mapped_column(String(200), default=False,nullable=True)

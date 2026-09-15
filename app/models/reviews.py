@@ -8,14 +8,16 @@ class Reviews(Base):
     __tablename__ = "reviews"
         
     id:Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    title:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    body:Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+    title:Mapped[str] = mapped_column(String(50), nullable=False )
+    body:Mapped[str] = mapped_column(String(200), nullable=False)
     rating:Mapped[int] = mapped_column(Integer,nullable=False)
     sentiment_label:Mapped[str] = mapped_column(String(200) ,nullable=False)
     sentiment_score:Mapped[float] = mapped_column(Float,nullable=False )
-    user_id:Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    restaurants_id:Mapped[int] = mapped_column(Integer, ForeignKey("restaurants.id"), nullable=False)
+    user_id:Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    restaurants_id:Mapped[int] = mapped_column(Integer, ForeignKey("restaurants.id"), index=True)
         
-    restaurants:Mapped["Restaurants"] = relationship("Restaurants", back_populates="owner")
-    users:Mapped["User"] = relationship("User", back_populates="reviews")
+    restaurant:Mapped["Restaurants"] = relationship("Restaurants", back_populates="reviews")
+    user:Mapped["User"] = relationship("User", back_populates="reviews")
+
+    review_posted:Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda:datetime.now(UTC))
      

@@ -8,13 +8,13 @@ class Restaurants(Base):
     __tablename__ = "restaurants"
             
     id:Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    title:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    location:Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
-    avg_rating:Mapped[float] = mapped_column(Float,nullable=False)
+    title:Mapped[str] = mapped_column(String(50), nullable=False)
+    location:Mapped[str] = mapped_column(String(200), nullable=False )
+    avg_rating:Mapped[float] = mapped_column(Float,default=0.0)
     cuisine:Mapped[str] = mapped_column(String(200) ,nullable=False)
     contact_number:Mapped[str] = mapped_column(String(15),nullable=False )
     owner_id:Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     
             
-    review:Mapped[list["Reviews"]] = relationship("Review", back_populates="restaurants")
-    owner:Mapped[list["User"]] = relationship("User", back_populates="restaurants")
+    reviews:Mapped[list["Reviews"]] = relationship("Review", back_populates="restaurant")
+    owner:Mapped["User"] = relationship("User", back_populates="restaurants")

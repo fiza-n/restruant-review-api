@@ -16,4 +16,4 @@ class User(Base):
     image_file:Mapped[str|None] = mapped_column(String(200), default=False,nullable=True)
 
     restaurants:Mapped[list["Restaurants"]] = relationship("Restaurants", back_populates="owner")
-    review:Mapped[list["Reviews"]] = relationship("Review", back_populates="user")
+    reviews:Mapped[list["Reviews"]] = relationship("Review", back_populates="user")

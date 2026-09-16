@@ -6,6 +6,7 @@ class ReviewBase(BaseModel):
     body: str = Field(min_length=1, max_length=500)
     rating: int = Field(ge=1, le=5)
     
+    
 
 class ReviewCreate(ReviewBase):
     pass
@@ -13,7 +14,8 @@ class ReviewCreate(ReviewBase):
 class ReviewResponse(ReviewBase):
     id: int
     user_id: int         
-    restaurant_id: int    
+    restaurant_id: int 
+    review_posted:datetime   
     sentiment_label: str 
     sentiment_score: float
     model_config = ConfigDict(from_attributes=True)

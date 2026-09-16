@@ -20,3 +20,9 @@ class User(Base):
 
     restaurants:Mapped[list["Restaurants"]] = relationship("Restaurants", back_populates="owner")
     reviews:Mapped[list["Reviews"]] = relationship("Reviews", back_populates="user")
+
+    @property
+    def image_path(self) -> str:
+        if self.image_file:
+            return f"/media/profile_pics/{self.image_file}"
+        return "/static/profile_pics/default.png"

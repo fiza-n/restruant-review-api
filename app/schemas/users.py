@@ -2,11 +2,12 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 
 
 class UserBase(BaseModel):
-    full_name: str = Field(min_length=1, max_length = 50)
+    username: str = Field(min_length=1, max_length = 50)
     email: EmailStr
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length = 50)
+
 
 
 class UserLogin(BaseModel):
@@ -17,5 +18,6 @@ class UserResponse(BaseModel):
     id: int
     email: str
     full_name: str
-
+    image_file: str | None
+    image_path: str | None
     model_config = ConfigDict(from_attributes=True)

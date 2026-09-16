@@ -1,9 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
+from datetime import datetime
 
 class ReviewBase(BaseModel):
     title: str = Field(min_length=1, max_length=50)
     body: str = Field(min_length=1, max_length=500)
     rating: int = Field(ge=1, le=5)
+    
 
 class ReviewCreate(ReviewBase):
     pass

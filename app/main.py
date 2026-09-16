@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from schemas.users import UserResponse, UserCreate
+from app.schemas.users import UserResponse, UserCreate
 
 app = FastAPI()
 

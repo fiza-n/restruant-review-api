@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Depends, status,HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from app.schemas.users import UserResponse, UserCreate
+from schemas.users import UserResponse, UserCreate
 from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,7 +16,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.mount("/media", StaticFiles(directory="media"), name="media")
-users = []
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def read_root():
@@ -30,12 +29,28 @@ def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)]):
     existing_user = result.scalars().first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
-    new_user = {
-        "id": 1,
-        "username": user.username,
-        "email": user.email,
-        "password": user.password
-    }
-    users.append(new_user)
+
+    result = db.execute(select(models.users.User).where(models.users.User.email == user.email),)
+    existing_email = result.scalars().first()
+    if existing_email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+    new_user = models.users.User(
+        username=user.username,
+        email=user.email,
+        password=user.password
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     return new_user
+
+@app.get("/api/v1/users/{user_id}", response_model=UserResponse)
+def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.users.User).where(models.users.User.id == user_id),)
+
+    user = result.scalars().first()
+    if user:
+        return user
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
 

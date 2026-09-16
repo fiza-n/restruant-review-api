@@ -2,11 +2,11 @@ from datetime import datetime, UTC
 from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String , Text, Float
 from sqlalchemy.orm import Mapped,mapped_column, relationship
-from app.db.base import Base
+from db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.reviews import Reviews
-    from app.models.users import User
+    from reviews import Reviews
+    from users import User
 
 class Restaurants(Base):
     __tablename__ = "restaurants"

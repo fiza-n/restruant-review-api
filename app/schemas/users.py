@@ -17,7 +17,7 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
-    full_name: str
+    username: str
     image_file: str | None
     image_path: str | None
     model_config = ConfigDict(from_attributes=True)

@@ -2,6 +2,7 @@ from fastapi import FastAPI,Depends, status,HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from schemas.users import UserResponse, UserCreate
+from schemas.restaurants import RestaurantResponse, RestaurantCreate
 from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -54,3 +55,26 @@ def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
 
+
+@app.post("/api/v1/restaurants", response_model=RestaurantResponse)
+def create_restaurant(restaurant: RestaurantCreate, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(
+        select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.title == restaurant.title)
+    )
+    existing_restaurant = result.scalars().first()
+    if existing_restaurant:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Restaurant already exists")
+
+    new_restaurant = models.restaurants.Restaurants(
+        title=restaurant.title,
+        location=restaurant.location,
+        cuisine=restaurant.cuisine,
+        contact_number=restaurant.contact_number,
+        owner_id=1
+        
+
+    )
+    db.add(new_restaurant)
+    db.commit()
+    db.refresh(new_restaurant)
+    return new_restaurant

@@ -17,6 +17,7 @@ class User(Base):
     username:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     email:Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     image_file:Mapped[str|None] = mapped_column(String(200), default=False,nullable=True)
+    password:Mapped[str] = mapped_column(String(200), nullable=False)
 
     restaurants:Mapped[list["Restaurants"]] = relationship("Restaurants", back_populates="owner")
     reviews:Mapped[list["Reviews"]] = relationship("Reviews", back_populates="user")

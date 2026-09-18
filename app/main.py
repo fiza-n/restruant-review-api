@@ -2,10 +2,15 @@ from fastapi import FastAPI,Depends, status,HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from schemas.users import UserResponse, UserCreate
-from schemas.restaurants import RestaurantResponse, RestaurantCreate
+from schemas.restaurants import RestaurantResponse, RestaurantCreate, RestaurantUpdate
+from schemas.review import ReviewResponse, ReviewCreate
 from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from datetime import datetime, UTC
+analyzer = SentimentIntensityAnalyzer()
+
 
 import models.restaurants, models.reviews, models.users
 from db.base import Base, engine, get_db
@@ -78,3 +83,109 @@ def create_restaurant(restaurant: RestaurantCreate, db: Annotated[Session, Depen
     db.commit()
     db.refresh(new_restaurant)
     return new_restaurant
+
+@app.get("/api/v1/restaurants/{restaurant_id}", response_model=RestaurantResponse)
+def get_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+
+    existing_restaurant = result.scalars().first()
+    if existing_restaurant:
+        return existing_restaurant
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+
+@app.get("/api/v1/restaurants", response_model=list[RestaurantResponse])
+def get_all_restaurants_by_cuisine(cuisine: str, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.cuisine == cuisine))
+    restaurants = result.scalars().all()
+    if restaurants:
+        return restaurants
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No restaurants found for the specified cuisine")
+
+@app.delete("/api/v1/restaurants/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+    existing_restaurant = result.scalars().first()
+    if not existing_restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    db.delete(existing_restaurant)
+    db.commit()
+    return 
+
+@app.patch("/api/v1/restaurants/{restaurant_id}", response_model=RestaurantResponse)
+def update_restaurant(restaurant_id: int, restaurant: RestaurantUpdate, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+    existing_restaurant = result.scalars().first()
+    if not existing_restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    existing_restaurant.title = restaurant.title
+    existing_restaurant.location = restaurant.location
+    existing_restaurant.cuisine = restaurant.cuisine
+    existing_restaurant.contact_number = restaurant.contact_number
+
+    db.commit()
+    db.refresh(existing_restaurant)
+    return existing_restaurant
+@app.post("/api/v1/restaurants/{restaurant_id}/reviews", response_model=ReviewResponse,  status_code=status.HTTP_201_CREATED)
+def create_review(restaurant_id: int, review: ReviewCreate, db: Annotated[Session, Depends(get_db)],):
+
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+    existing_restaurant = result.scalars().first()
+    if not existing_restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+
+    scores = analyzer.polarity_scores(review.body)
+    compound = scores["compound"]
+    
+    if compound >= 0.05:
+        label = "positive"
+    elif compound <= -0.05:
+        label = "negative"
+    else:
+        label = "neutral"
+    
+    new_review = models.reviews.Reviews(
+                title=review.title,
+                body=review.body,
+                rating=review.rating,
+                sentiment_label=label,
+                sentiment_score=compound,
+                user_id=1,
+                restaurants_id=restaurant_id,
+                review_posted=datetime.now(UTC)
+    
+            )
+    db.add(new_review)
+    db.commit()
+    db.refresh(new_review)
+    return new_review
+
+    all_reviews = db.execute(select(models.reviews.Reviews).where(
+        models.reviews.Reviews.restaurant_id == restaurant_id
+    ))
+    reviews_list = all_reviews.scalars().all()
+    existing_restaurant.avg_rating = sum(r.rating for r in reviews_list) / len(reviews_list)
+    db.commit()
+
+    return new_review
+
+@app.get("/api/v1/restaurants/{restaurant_id}/reviews", response_model=list[ReviewResponse])
+def get_reviews_for_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.restaurants_id == restaurant_id))
+    reviews = result.scalars().all()
+    if reviews:
+        return reviews
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No reviews found for the specified restaurant")
+
+@app.delete("/api/v1/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_review(review_id: int, db: Annotated[Session, Depends(get_db)],):
+    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.id == review_id))
+    existing_review = result.scalars().first()
+    if not existing_review:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+    
+    db.delete(existing_review)
+    db.commit()
+    return

@@ -14,3 +14,10 @@ class RestaurantResponse(RestaurantBase):
     id: int
     avg_rating: float
     model_config = ConfigDict(from_attributes=True)
+
+
+class RestaurantUpdate(BaseModel):
+    title: str | None = Field(None, min_length=1, max_length=50)
+    location: str | None = Field(None, min_length=1, max_length=50)
+    cuisine: str | None = Field(None, min_length=1, max_length=50)
+    contact_number: str | None = Field(None, min_length=10, max_length=15)

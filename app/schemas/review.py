@@ -14,7 +14,7 @@ class ReviewCreate(ReviewBase):
 class ReviewResponse(ReviewBase):
     id: int
     user_id: int         
-    restaurant_id: int 
+    restaurants_id: int 
     review_posted:datetime   
     sentiment_label: str 
     sentiment_score: float

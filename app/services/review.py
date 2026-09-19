@@ -1,6 +1,6 @@
 from sqlalchemy import select
 import models.restaurants, models.reviews, models.users
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sentiment import *
 
 
@@ -37,3 +37,20 @@ def create_review(db,restaurant_id, review):
     db.commit()
 
     return new_review
+
+def delete_review(review_id, db):
+    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.id == review_id))
+    existing_review = result.scalars().first()
+    if not existing_review:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+    
+    db.delete(existing_review)
+    db.commit()
+    return
+
+def get_reviews_for_restaurant(restaurant_id, db):
+    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.restaurants_id == restaurant_id))
+    reviews = result.scalars().all()
+    if reviews:
+        return reviews
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No reviews found for the specified restaurant")

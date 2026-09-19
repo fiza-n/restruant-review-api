@@ -45,3 +45,33 @@ def get_all_restaurants_by_cuisine(cuisine, db):
     if not restaurants:
         raise HTTPException(404, "No restaurants found")
     return restaurants
+
+def delete_restaurant(restaurant_id, db,):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+    existing_restaurant = result.scalars().first()
+    if not existing_restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    db.delete(existing_restaurant)
+    db.commit()
+    return 
+
+
+def update_restaurant(restaurant_id, db, restaurant):
+    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
+    existing_restaurant = result.scalars().first()
+    if not existing_restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    if restaurant.title is not None:
+        existing_restaurant.title = restaurant.title
+    if restaurant.location is not None:
+        existing_restaurant.location = restaurant.location
+    if restaurant.cuisine is not None:
+        existing_restaurant.cuisine = restaurant.cuisine
+    if restaurant.contact_number is not None:
+        existing_restaurant.contact_number = restaurant.contact_number
+
+    db.commit()
+    db.refresh(existing_restaurant)
+    return existing_restaurant

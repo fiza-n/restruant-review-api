@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, UTC
 import services.review as review_sv
 import services.restaurant as restaurant_sv
+import services.auth as auth_sv
 
 
 from db.base import Base, engine, get_db
@@ -29,34 +30,12 @@ def read_root():
 
 
 @app.post("/api/v1/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)]):
-    result = db.execute(select(models.users.User).where(models.users.User.username == user.username),)
-    existing_user = result.scalars().first()
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
-
-    result = db.execute(select(models.users.User).where(models.users.User.email == user.email),)
-    existing_email = result.scalars().first()
-    if existing_email:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
-    new_user = models.users.User(
-        username=user.username,
-        email=user.email,
-        password=user.password
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)],):
+   return auth_sv.create_user(user, db)
 
 @app.get("/api/v1/users/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
-    result = db.execute(select(models.users.User).where(models.users.User.id == user_id),)
-
-    user = result.scalars().first()
-    if user:
-        return user
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return auth_sv.get_user(user_id, db)
 
 
 
@@ -71,53 +50,25 @@ def get_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],)
 
 @app.get("/api/v1/restaurants", response_model=list[RestaurantResponse])
 def get_all_restaurants_by_cuisine(cuisine: str, db: Annotated[Session, Depends(get_db)],):
+    return restaurant_sv.get_all_restaurants_by_cuisine(cuisine, db)
     
 
 @app.delete("/api/v1/restaurants/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
-    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
-    existing_restaurant = result.scalars().first()
-    if not existing_restaurant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    
-    db.delete(existing_restaurant)
-    db.commit()
-    return 
+    return restaurant_sv.delete_restaurant(restaurant_id, db)
 
 @app.patch("/api/v1/restaurants/{restaurant_id}", response_model=RestaurantResponse)
 def update_restaurant(restaurant_id: int, restaurant: RestaurantUpdate, db: Annotated[Session, Depends(get_db)],):
-    result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
-    existing_restaurant = result.scalars().first()
-    if not existing_restaurant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    
-    existing_restaurant.title = restaurant.title
-    existing_restaurant.location = restaurant.location
-    existing_restaurant.cuisine = restaurant.cuisine
-    existing_restaurant.contact_number = restaurant.contact_number
+    return restaurant_sv.update_restaurant(restaurant_id, db, restaurant)
 
-    db.commit()
-    db.refresh(existing_restaurant)
-    return existing_restaurant
 @app.post("/api/v1/restaurants/{restaurant_id}/reviews", response_model=ReviewResponse,  status_code=status.HTTP_201_CREATED)
 def create_review(restaurant_id: int, review: ReviewCreate, db: Annotated[Session, Depends(get_db)],):
     return review_sv.create_review(db, restaurant_id, review)
 
 @app.get("/api/v1/restaurants/{restaurant_id}/reviews", response_model=list[ReviewResponse])
 def get_reviews_for_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
-    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.restaurants_id == restaurant_id))
-    reviews = result.scalars().all()
-    if reviews:
-        return reviews
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No reviews found for the specified restaurant")
+   return review_sv.get_reviews_for_restaurant(restaurant_id, db)
 
 @app.delete("/api/v1/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_review(review_id: int, db: Annotated[Session, Depends(get_db)],):
-    result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.id == review_id))
-    existing_review = result.scalars().first()
-    if not existing_review:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
-    
-    db.delete(existing_review)
-    db.commit()
-    return
+   return review_sv.delete_review(review_id, db)

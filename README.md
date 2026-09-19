@@ -102,7 +102,6 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-> ⚠️ Never commit your `.env` file. It is gitignored by default.
 
 ---
 

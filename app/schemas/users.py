@@ -14,10 +14,16 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length = 50)
 
-class UserResponse(BaseModel):
+class UserPublic(BaseModel):
     id: int
-    email: str
     username: str
     image_file: str | None
     image_path: str | None
     model_config = ConfigDict(from_attributes=True)
+
+class UserPrivate(UserPublic):
+    email: EmailStr
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

@@ -11,7 +11,7 @@ from datetime import datetime, UTC, timedelta
 import services.review as review_sv
 import services.restaurant as restaurant_sv
 import services.user as user_sv
-from fastapi.security import OAuthPasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,8 +34,9 @@ def read_root():
 @app.post("/api/v1/users", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
 def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)],):
    return user_sv.create_user(user, db)
+
 @app.post("/api/v1/auth/token", response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuthPasswordRequestForm, Depends()],db: AsyncSession = Depends(get_db)):
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: AsyncSession = Depends(get_db)):
     return await user_sv.login_for_access_token(form_data, db)
 
 

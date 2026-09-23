@@ -1,4 +1,4 @@
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer # type: ignore
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer 
 
 analyzer = SentimentIntensityAnalyzer()
 

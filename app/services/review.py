@@ -1,7 +1,7 @@
 from sqlalchemy import select
 import models.restaurants, models.reviews, models.users
 from fastapi import HTTPException, status
-from sentiment import *
+from services.sentiment import evaluate_sentiment
 
 
 def create_review(db,restaurant_id, review):

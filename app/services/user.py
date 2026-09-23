@@ -1,7 +1,7 @@
 from fastapi import status,HTTPException
 import models.users
 from sqlalchemy import select, func
-from auth import hash_password, oauth2_scheme, verify_password, create_access_token, verify_access_token
+from services.auth import hash_password, oauth2_scheme, verify_password, create_access_token, verify_access_token
 from datetime import datetime, UTC, timedelta
 from core.config import settings
 from schemas.users import Token
@@ -26,11 +26,11 @@ def create_user(user, db):
     db.refresh(new_user)
     return new_user
 
-async def login_for_access_token(form_data,db):
-    result = await db.execute(select(models.users.User).where(func.lower(models.users.User.email) == form_data.username.lower()))
+def login_for_access_token(form_data,db):
+    result =  db.execute(select(models.users.User).where(func.lower(models.users.User.email) == form_data.username.lower()))
     user= result.scalars().first()
 
-    if not user or verify_password(form_data.password, user.password):
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -38,12 +38,12 @@ async def login_for_access_token(form_data,db):
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data ={"subs": str(user.id)},
+        data ={"sub": str(user.id)},
         expires_delta=access_token_expires,
     )
     return Token(access_token=access_token, token_type="bearer")
 
-async def get_current_user(token, db):
+def get_current_user(token, db):
     user_id = verify_access_token(token)
     if user_id is None:
         raise HTTPException(
@@ -59,7 +59,7 @@ async def get_current_user(token, db):
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    result = await db.execute(select(models.users.User).where(models.users.User.id == user_id_int))
+    result = db.execute(select(models.users.User).where(models.users.User.id == user_id_int))
     user = result.scalars().first()
     if not user:
         raise HTTPException(

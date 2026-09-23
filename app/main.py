@@ -14,6 +14,7 @@ import services.user as user_sv
 from fastapi.security import OAuth2PasswordRequestForm
 from core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
+from services.auth import hash_password, oauth2_scheme
 
 from db.base import Base, engine, get_db
 
@@ -31,15 +32,17 @@ def read_root():
     return f"<h1>Hello world</h1>"
 
 
-@app.post("/api/v1/users", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
+@app.post("/api/v1/users/register", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
 def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)],):
    return user_sv.create_user(user, db)
 
-@app.post("/api/v1/auth/token", response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: AsyncSession = Depends(get_db)):
-    return await user_sv.login_for_access_token(form_data, db)
+@app.post("/api/v1/auth/login", response_model=Token)
+def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: Annotated[AsyncSession, Depends(get_db)]):
+    return user_sv.login_for_access_token(form_data, db)
 
-
+@app.get("/api/v1/users/me", response_model=UserPrivate)
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[AsyncSession, Depends(get_db)]):
+    return user_sv.get_current_user(token, db)
 
 @app.get("/api/v1/users/{user_id}", response_model=UserPublic)
 def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):

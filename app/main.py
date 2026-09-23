@@ -1,17 +1,19 @@
 from fastapi import FastAPI,Depends, status,HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from schemas.users import UserPublic, UserCreate
+from schemas.users import UserPublic, UserCreate, UserPrivate, Token
 from schemas.restaurants import RestaurantResponse, RestaurantCreate, RestaurantUpdate
 from schemas.review import ReviewResponse, ReviewCreate
 from typing import Annotated
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 import services.review as review_sv
 import services.restaurant as restaurant_sv
 import services.user as user_sv
-
+from fastapi.security import OAuthPasswordRequestForm
+from core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.base import Base, engine, get_db
 
@@ -29,9 +31,14 @@ def read_root():
     return f"<h1>Hello world</h1>"
 
 
-@app.post("/api/v1/users", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@app.post("/api/v1/users", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
 def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)],):
    return user_sv.create_user(user, db)
+@app.post("/api/v1/auth/token", response_model=Token)
+async def login_for_access_token(form_data: Annotated[OAuthPasswordRequestForm, Depends()],db: AsyncSession = Depends(get_db)):
+    return await user_sv.login_for_access_token(form_data, db)
+
+
 
 @app.get("/api/v1/users/{user_id}", response_model=UserPublic)
 def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):

@@ -1,21 +1,13 @@
 from fastapi import FastAPI,Depends, status,HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from schemas.users import UserPublic, UserCreate, UserPrivate, Token
 from schemas.restaurants import RestaurantResponse, RestaurantCreate, RestaurantUpdate
 from schemas.review import ReviewResponse, ReviewCreate
 from typing import Annotated
-from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from datetime import datetime, UTC, timedelta
 import services.review as review_sv
 import services.restaurant as restaurant_sv
-import services.user as user_sv
-from fastapi.security import OAuth2PasswordRequestForm
-from core.config import settings
-from sqlalchemy.ext.asyncio import AsyncSession
-from services.auth import hash_password, oauth2_scheme
-
+from api.v1.endpoints import users, auth
 from db.base import Base, engine, get_db
 
 Base.metadata.create_all(bind=engine)
@@ -32,21 +24,9 @@ def read_root():
     return f"<h1>Hello world</h1>"
 
 
-@app.post("/api/v1/users/register", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
-def create_user(user:UserCreate, db: Annotated[Session, Depends(get_db)],):
-   return user_sv.create_user(user, db)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["users"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
-@app.post("/api/v1/auth/login", response_model=Token)
-def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: Annotated[AsyncSession, Depends(get_db)]):
-    return user_sv.login_for_access_token(form_data, db)
-
-@app.get("/api/v1/users/me", response_model=UserPrivate)
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[AsyncSession, Depends(get_db)]):
-    return user_sv.get_current_user(token, db)
-
-@app.get("/api/v1/users/{user_id}", response_model=UserPublic)
-def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
-    return user_sv.get_user(user_id, db)
 
 
 

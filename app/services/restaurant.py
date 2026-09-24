@@ -10,6 +10,7 @@ def create_restaurant(db, restaurant, current_user):
     existing_restaurant = result.scalars().first()
     if existing_restaurant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Restaurant already exists")
+
     
     new_restaurant = models.restaurants.Restaurants(
         title=restaurant.title,

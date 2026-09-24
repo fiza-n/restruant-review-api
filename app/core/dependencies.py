@@ -17,8 +17,17 @@ def get_current_user(
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"}
         )
+
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     result = db.execute(
-        select(models.users.User).where(models.users.User.id == int(user_id))
+        select(models.users.User).where(models.users.User.id == user_id_int)
     )
     user = result.scalars().first()
     if not user:

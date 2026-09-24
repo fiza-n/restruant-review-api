@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import services.restaurant as restaurant_sv
 from db.base import get_db
 from schemas.restaurants import RestaurantResponse, RestaurantCreate, RestaurantUpdate
-from core.dependencies import get_current_user
+from core.dependencies import CurrentUser
 import models.users
 
 router = APIRouter()
@@ -13,7 +13,7 @@ router = APIRouter()
 def create_restaurant(
     restaurant: RestaurantCreate,
     db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[models.users.User, Depends(get_current_user)]
+    current_user: CurrentUser
 ):
     return restaurant_sv.create_restaurant(db, restaurant, current_user)
 
@@ -32,7 +32,7 @@ def get_all_restaurants(
 def delete_restaurant(
     restaurant_id: int,
     db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[models.users.User, Depends(get_current_user)]
+    current_user: CurrentUser
 ):
     return restaurant_sv.delete_restaurant(db, restaurant_id, current_user)
 
@@ -41,6 +41,6 @@ def update_restaurant(
     restaurant_id: int,
     restaurant: RestaurantUpdate,
     db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[models.users.User, Depends(get_current_user)]
+    current_user: CurrentUser
 ):
     return restaurant_sv.update_restaurant( restaurant_id,db, restaurant, current_user)

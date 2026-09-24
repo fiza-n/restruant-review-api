@@ -9,6 +9,7 @@ class RestaurantBase(BaseModel):
 
 class RestaurantCreate(RestaurantBase):
     pass
+    
 
 class RestaurantResponse(RestaurantBase):
     id: int

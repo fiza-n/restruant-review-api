@@ -1,5 +1,4 @@
 from fastapi import APIRouter,Depends, status,HTTPException
-import models.users
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated

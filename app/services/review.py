@@ -4,12 +4,14 @@ from fastapi import HTTPException, status
 from services.sentiment import evaluate_sentiment
 
 
-def create_review(db,restaurant_id, review):
+def create_review(db,restaurant_id, review, current_user):
 
     result = db.execute(select(models.restaurants.Restaurants).where(models.restaurants.Restaurants.id == restaurant_id))
     existing_restaurant = result.scalars().first()
     if not existing_restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
+    if existing_restaurant.owner_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot review your own restaurant")
 
     label, compound = evaluate_sentiment(review.body)
     
@@ -19,7 +21,7 @@ def create_review(db,restaurant_id, review):
                 rating=review.rating,
                 sentiment_label=label,
                 sentiment_score=compound,
-                user_id=1,
+                user_id=current_user.id,
                 restaurants_id=restaurant_id,
 
     
@@ -30,7 +32,7 @@ def create_review(db,restaurant_id, review):
     
 
     all_reviews = db.execute(select(models.reviews.Reviews).where(
-        models.reviews.Reviews.restaurant_id == restaurant_id
+        models.reviews.Reviews.restaurants_id == restaurant_id
     ))
     reviews_list = all_reviews.scalars().all()
     existing_restaurant.avg_rating = sum(r.rating for r in reviews_list) / len(reviews_list)
@@ -38,12 +40,14 @@ def create_review(db,restaurant_id, review):
 
     return new_review
 
-def delete_review(review_id, db):
+def delete_review(review_id, db, current_user):
     result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.id == review_id))
     existing_review = result.scalars().first()
+
     if not existing_review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
-    
+    if existing_review.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to delete this review")
     db.delete(existing_review)
     db.commit()
     return

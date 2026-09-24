@@ -19,7 +19,7 @@ def read_root():
     return f"<h1>Hello world</h1>"
 
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["users"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(restaurant.router, prefix="/api/v1/restaurants", tags=["restaurants"])
 app.include_router(review.router, prefix="/api/v1/restaurants", tags=["reviews"])

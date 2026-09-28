@@ -2,7 +2,7 @@ from datetime import datetime, UTC
 from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String , Text, Float
 from sqlalchemy.orm import Mapped,mapped_column, relationship
-from app.db.base import Base
+from db.base import Base
 
 if TYPE_CHECKING:
     from reviews import Reviews

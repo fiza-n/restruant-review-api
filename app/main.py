@@ -18,9 +18,9 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.mount("/media", StaticFiles(directory="media"), name="media")
+# app.mount("/media", StaticFiles(directory="media"), name="media")
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def read_root():

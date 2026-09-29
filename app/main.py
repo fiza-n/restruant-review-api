@@ -3,16 +3,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from api.v1.endpoints import users, auth, review , restaurant
 from db.base import Base, engine
-from contextlib import asynccontextmanager
+
 
 
 Base.metadata.create_all(bind=engine)
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
+
+def lifespan(_app: FastAPI):
    
     yield
 
-    await engine.dispose()
+    engine.dispose()
 
 
 

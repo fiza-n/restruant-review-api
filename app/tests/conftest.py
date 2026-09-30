@@ -1,6 +1,5 @@
 import os 
 os.environ["DATABASE_URL"] = (
-    "postgresql://neondb_owner:npg_yTgbl8NYqkS7@ep-crimson-glade-b4d0u444-pooler.c-6.us-east-2.aws.neon.tech/test_restaurant_db?sslmode=require&channel_binding=require"
 )
 
 import pytest

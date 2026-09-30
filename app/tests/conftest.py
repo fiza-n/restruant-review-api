@@ -1,11 +1,7 @@
 import os 
-
-
 os.environ["DATABASE_URL"] = (
-    ""
+    "postgresql://neondb_owner:npg_yTgbl8NYqkS7@ep-crimson-glade-b4d0u444-pooler.c-6.us-east-2.aws.neon.tech/test_restaurant_db?sslmode=require&channel_binding=require"
 )
-
-
 
 import pytest
 from fastapi.testclient import TestClient
@@ -43,11 +39,24 @@ def db_session(test_engine, setup_database):
 
     test_session = sessionmaker(bind=conn,expire_on_commit=False, join_transaction_mode="create_savepoint")
 
-    with test_session as session:
+    with test_session() as session:
+
         try: 
            yield session
 
         finally: 
             session.close()
-            session.rollback()
+            trans.rollback()
             conn.close()
+
+
+@pytest.fixture(scope="session")
+def client(db_session):
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app=app) as c:
+        yield c
+
+    app.dependency_overrides.clear()

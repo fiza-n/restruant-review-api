@@ -88,4 +88,7 @@ def login_user(client: TestClient, email: str = "test@example.com", password: st
         }
     )
     assert response.status_code == 200, f"failed login user: {response.text}"
-    return response.json()
+    return response.json()["access_token"]
+
+def auth_headers(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}

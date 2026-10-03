@@ -1,5 +1,6 @@
 import os 
 os.environ["DATABASE_URL"] = (
+    ""
 )
 
 import pytest
@@ -59,3 +60,32 @@ def client(db_session):
         yield c
 
     app.dependency_overrides.clear()
+
+def create_test_users(
+    client: TestClient,
+    username:str =  "testuser",
+    email: str = "test@example.com",
+    password: str = "testpassword123"
+) -> dict:
+    response = client.post(
+        "/api/v1/auth/register",
+        json = {
+            "username": username,
+            "email": email,
+            "password": password
+        }
+    )
+    assert response.status_code == 201, f"failed create user: {response.text}"
+    return response.json()
+
+
+def login_user(client: TestClient, email: str = "test@example.com", password: str = "testpassword123") -> str:
+    response = client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username": email,
+            "password": password
+        }
+    )
+    assert response.status_code == 200, f"failed login user: {response.text}"
+    return response.json()

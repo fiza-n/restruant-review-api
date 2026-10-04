@@ -92,3 +92,22 @@ def login_user(client: TestClient, email: str = "test@example.com", password: st
 
 def auth_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def create_test_restaurant(
+    client, 
+    auth_headers,
+    title: str = "Test Restaurant"
+):
+    response = client.post(
+        "/api/v1/restaurants",
+        json={
+            "title": title,
+            "location": "Karachi",
+            "cuisine": "Pakistani",
+            "contact_number": "03001234567"
+        },
+        headers=auth_headers  
+    )
+    assert response.status_code == 201
+    return response.json()  

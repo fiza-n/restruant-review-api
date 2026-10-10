@@ -1,4 +1,4 @@
-from conftest import create_test_restaurant, create_test_users, login_user
+from tests.conftest import create_test_restaurant, create_test_users, login_user
 
 def test_create_restaurant_success(client, auth_headers):
     restaurant = create_test_restaurant(client, auth_headers)

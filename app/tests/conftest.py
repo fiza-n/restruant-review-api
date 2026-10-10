@@ -11,9 +11,6 @@ from db.base import Base, get_db
 from main import app
 from sqlalchemy.pool import NullPool
 
-
-
-
 @pytest.fixture(scope="session")
 def test_engine():
     engine = create_engine(
@@ -110,4 +107,29 @@ def create_test_restaurant(
         headers=auth_headers  
     )
     assert response.status_code == 201
-    return response.json()  
+    return response.json() 
+
+def create_test_review(client, headers,restaurant_id : int, title: str= "Test review"):
+    
+    response = client.post(
+        f"/api/v1/restaurants/{restaurant_id}/reviews",
+        json={
+            "title":title,
+            "body" :"it was good",
+            "rating":5
+        },
+        headers=headers
+    )
+    assert response.status_code == 201, f"Failed to create review: {response.text}"
+    return response.json()
+
+@pytest.fixture(scope="session")
+def reviewer_headers(client):
+    create_test_users(
+        client,
+        username="reviewer",
+        email="reviewer@example.com",
+        password="testpassword123"
+    )
+    token = login_user(client, email="reviewer@example.com", password="testpassword123")
+    return {"Authorization": f"Bearer {token}"}

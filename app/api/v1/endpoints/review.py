@@ -8,15 +8,22 @@ from schemas.review import ReviewResponse, ReviewCreate
 from core.dependencies import CurrentUser
 router = APIRouter()
 
-
-@router.post("/{restaurant_id}/reviews", response_model=ReviewResponse,  status_code=status.HTTP_201_CREATED)
-def create_review(restaurant_id: int, review: ReviewCreate, db: Annotated[Session, Depends(get_db)], current_user: CurrentUser):
+@router.post("/restaurants/{restaurant_id}/reviews",
+             response_model=ReviewResponse,
+             status_code=status.HTTP_201_CREATED)
+def create_review(restaurant_id: int, review: ReviewCreate,
+                  db: Annotated[Session, Depends(get_db)],
+                  current_user: CurrentUser):
     return review_sv.create_review(db, restaurant_id, review, current_user)
 
-@router.get("/{restaurant_id}/reviews", response_model=list[ReviewResponse])
-def get_reviews_for_restaurant(restaurant_id: int, db: Annotated[Session, Depends(get_db)],):
-   return review_sv.get_reviews_for_restaurant(restaurant_id, db)
+@router.get("/restaurants/{restaurant_id}/reviews",
+            response_model=list[ReviewResponse])
+def get_reviews_for_restaurant(restaurant_id: int,
+                               db: Annotated[Session, Depends(get_db)]):
+    return review_sv.get_reviews_for_restaurant(db, restaurant_id)
 
-@router.delete("/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_review(review_id: int, db: Annotated[Session, Depends(get_db)], current_user: CurrentUser):
-   return review_sv.delete_review(review_id, db, current_user)
+@router.delete("/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_review(review_id: int,
+                  db: Annotated[Session, Depends(get_db)],
+                  current_user: CurrentUser):
+    return review_sv.delete_review(db, review_id, current_user)

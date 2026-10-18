@@ -34,7 +34,7 @@ def delete_restaurant(
     db: Annotated[Session, Depends(get_db)],
     current_user: CurrentUser
 ):
-    return restaurant_sv.delete_restaurant(db, restaurant_id, current_user)
+    return restaurant_sv.delete_restaurant(restaurant_id, db, current_user)
 
 @router.patch("/{restaurant_id}", response_model=RestaurantResponse)
 def update_restaurant(

@@ -1,7 +1,16 @@
-import os 
-os.environ["DATABASE_URL"] = (
-    ""
-)
+import os
+from dotenv import load_dotenv
+
+load_dotenv(".env.test", override=True)
+
+db_url = os.environ.get("DATABASE_URL")
+
+if not db_url:
+    raise RuntimeError("DATABASE_URL not set for tests")
+if "test" not in db_url.split("/")[-1]:
+    raise RuntimeError("Refusing to run tests: DATABASE_URL is not a test database")
+
+os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-characters-long"
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,10 +23,12 @@ from sqlalchemy.pool import NullPool
 @pytest.fixture(scope="session")
 def test_engine():
     engine = create_engine(
-        os.environ["DATABASE_URL"],
-        poolclass=NullPool
+        db_url,
+        poolclass=NullPool,
+        connect_args={"connect_timeout": 30},
     )
-    return engine
+    yield engine
+    engine.dispose()
 
 @pytest.fixture(scope="session")
 def setup_database(test_engine):
@@ -27,7 +38,7 @@ def setup_database(test_engine):
     yield
     
     Base.metadata.drop_all(bind=test_engine)
-    test_engine.dispose()
+    
 
 @pytest.fixture(scope="session")
 def db_session(test_engine, setup_database):
@@ -87,7 +98,11 @@ def login_user(client: TestClient, email: str = "test@example.com", password: st
     assert response.status_code == 200, f"failed login user: {response.text}"
     return response.json()["access_token"]
 
-def auth_headers(token: str) -> dict[str, str]:
+
+@pytest.fixture(scope="session")
+def auth_headers(client):
+    create_test_users(client, username="owneruser", email="owner@example.com")
+    token = login_user(client, email="owner@example.com")
     return {"Authorization": f"Bearer {token}"}
 
 

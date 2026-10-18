@@ -40,7 +40,7 @@ def create_review(db,restaurant_id, review, current_user):
 
     return new_review
 
-def delete_review(review_id, db, current_user):
+def delete_review(db,review_id,  current_user):
     result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.id == review_id))
     existing_review = result.scalars().first()
 
@@ -52,7 +52,7 @@ def delete_review(review_id, db, current_user):
     db.commit()
     return
 
-def get_reviews_for_restaurant(restaurant_id, db):
+def get_reviews_for_restaurant( db, restaurant_id):
     result = db.execute(select(models.reviews.Reviews).where(models.reviews.Reviews.restaurants_id == restaurant_id))
     reviews = result.scalars().all()
     if reviews:

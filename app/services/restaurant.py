@@ -34,7 +34,7 @@ def get_restaurant(db, restaurant_id):
         return existing_restaurant
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
 
-def get_all_restaurants_by_cuisine(cuisine, db):
+def get_all_restaurants_by_cuisine(db, cuisine):
     if cuisine:
         result = db.execute(select(models.restaurants.Restaurants).where(
             models.restaurants.Restaurants.cuisine == cuisine
@@ -67,7 +67,7 @@ def update_restaurant(restaurant_id, db, restaurant, current_user):
     if not existing_restaurant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
 
-    if restaurant.owner_id != current_user.id:
+    if existing_restaurant.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this restaurant")
     
     if restaurant.title is not None:
